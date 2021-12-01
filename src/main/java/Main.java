@@ -11,6 +11,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws IOException {
 
+        //sz is testing some shit
      //   ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
         File file = new File("Config.yml");
