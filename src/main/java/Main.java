@@ -21,8 +21,7 @@ public class Main {
 
         System.out.println("node info " + node.toString());
 
-
-
+;
 
         File file2 = new File("NodeFiles.yml");
 
@@ -31,10 +30,6 @@ public class Main {
         NodeFilesReader node2 = om2.readValue(file2, NodeFilesReader.class);
 
         System.out.println("node info " + node2.toString());
-
-
-
-
 
 
 
