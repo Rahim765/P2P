@@ -65,5 +65,7 @@ public class Main {
         Runtime rt = Runtime.getRuntime();
         String url = link;
         rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+
+        //testesteste
     }
 }
