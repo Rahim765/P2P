@@ -3,9 +3,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 //import com.sun.tools.jdeprscan.scan.Scan;
 import com.sun.net.httpserver.HttpServer;
 import org.yaml.snakeyaml.Yaml;
+
+import javax.sound.sampled.Port;
 import java.applet.AppletContext;
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -28,7 +31,10 @@ public class Main {
 
         NodeFilesReader node2 = om2.readValue(file2, NodeFilesReader.class);
 
-
+        HttpServer server = HttpServer.create(new InetSocketAddress(node.getNode_port()), 0);
+        server.createContext("/"+node.getNode_number(), new Node.MyHandler());
+        server.setExecutor(null); // creates a default executor
+        server.start();
 
 
         Scanner sc = new Scanner(System.in);
@@ -56,16 +62,49 @@ public class Main {
                 port = node.getFriend_nodes().get(i).getNode_port();
         }
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(node.getNode_port()), 0);
-        server.createContext("/"+node.getNode_number(), new Node.MyHandler());
-        server.setExecutor(null); // creates a default executor
-        server.start();
 
         String link = "http://localhost:" + port + "/" + nodeNum;
+        try {
+            String urlParameters = "message=" + req;
+            URL url = new URL(link);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+            connection.setRequestProperty("charset", "utf-8");
+            connection.setRequestProperty("Content-Length","" + Integer.toString(urlParameters.getBytes().length));
+            System.out.println(connection.getRequestProperty("Content-Length"));
+            connection.setUseCaches(false);
+
+            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+            wr.writeBytes(urlParameters);
+
+
+
+//            BufferedReader br = null;
+//            if (100 <= conn.getResponseCode() && conn.getResponseCode() <= 399) {
+//                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//            } else {
+//                br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+//            }
+//
+            int code = connection.getResponseCode();
+            System.out.println(code);
+            wr.flush();
+            wr.close();
+            connection.disconnect();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
         Runtime rt = Runtime.getRuntime();
         String url = link;
         rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
 
-        //testesteste
     }
 }

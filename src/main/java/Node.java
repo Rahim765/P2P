@@ -1,4 +1,8 @@
 import java.awt.image.AreaAveragingScaleFilter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,18 +33,58 @@ public class Node {
 
     }
 
+
+    class Temp {
+
+        public void sendHttpGETRequest() throws IOException {
+            String USER_AGENT = "Mozilla/5.0";
+            String GET_URL = "http://localhost:"+Node.this.node_port+"/"+Node.this.node_number;
+
+            URL obj = new URL(GET_URL);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) obj.openConnection();
+            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
+            int responseCode = httpURLConnection.getResponseCode();
+            System.out.println("GET Response Code :: " + responseCode);
+            if (responseCode == HttpURLConnection.HTTP_OK) { // success
+                BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in .readLine()) != null) {
+                    response.append(inputLine);
+                } in .close();
+
+                // print result
+                System.out.println(response.toString());
+            } else {
+                System.out.println("GET request not worked");
+            }
+
+            for (int i = 1; i <= 8; i++) {
+                System.out.println(httpURLConnection.getHeaderFieldKey(i) + " = " + httpURLConnection.getHeaderField(i));
+            }
+
+        }
+
+    }
     static class MyHandler implements HttpHandler {
+
         @Override
         public void handle(HttpExchange t) throws IOException {
-            String response = "This is the response";
-            t.sendResponseHeaders(200, response.length());
-            OutputStream os = t.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
+
+                Temp temp = new Temp();
+                String response = "This is the response";
+                t.sendResponseHeaders(200, response.length());
+                OutputStream os = t.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+
         }
     }
 
     public Node() {
+
     }
 
     public int getNode_number() {
