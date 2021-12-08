@@ -19,7 +19,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File file = new File("Config2.yml");
+        File file = new File("Config.yml");
 
         ObjectMapper om = new ObjectMapper(new YAMLFactory());
 
@@ -83,6 +83,7 @@ public class Main {
                 new InputStreamReader(con.getInputStream()));
         String inputLine;
         String content ="";
+        String final_string = "";
         while ((inputLine = in.readLine()) != null) {
             content+=inputLine;
         }
@@ -90,13 +91,16 @@ public class Main {
         for (int i = 0; i <filedic.length ; i++) {
             String[] mainfile = filedic[i].split("/");
             if (mainfile[2].equals(req)){
+                final_string = mainfile[2];
                 inputLine = filedic[i];
+                break;
             }
         }
         System.out.println(inputLine);
         in.close();
 
-
+       node.setNew_files_dir(node.getNew_files_dir()+final_string+" ");
+        System.out.println(node.getNew_files_dir());
 
 //        String link = "http://localhost:" + port + "/" + nodeNum;
 //        Runtime rt = Runtime.getRuntime();
