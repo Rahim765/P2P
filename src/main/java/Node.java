@@ -2,6 +2,7 @@ import java.awt.image.AreaAveragingScaleFilter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.io.IOException;
@@ -12,12 +13,12 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 public class Node {
-    private int node_number;
-    private int node_port;
-    private String owned_files_dir ;
-    private String new_files_dir;
-    private ArrayList<String> owned_files;
-    private ArrayList<FriendNode> friend_nodes ;
+    static private int node_number;
+    static private int node_port;
+    static private String owned_files_dir ;
+    static private String new_files_dir;
+    static private ArrayList<String> owned_files;
+    static private ArrayList<FriendNode> friend_nodes ;
 
     public Node(int node_number, int node_port, String owned_files_dir, String new_files_dir,
                 ArrayList<String> owned_files, ArrayList<FriendNode> friend_nodes) {
@@ -33,48 +34,37 @@ public class Node {
 
     }
 
-
-    class Temp {
-
-        public void sendHttpGETRequest() throws IOException {
-            String USER_AGENT = "Mozilla/5.0";
-            String GET_URL = "http://localhost:"+Node.this.node_port+"/"+Node.this.node_number;
-
-            URL obj = new URL(GET_URL);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) obj.openConnection();
-            httpURLConnection.setRequestMethod("GET");
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
-            int responseCode = httpURLConnection.getResponseCode();
-            System.out.println("GET Response Code :: " + responseCode);
-            if (responseCode == HttpURLConnection.HTTP_OK) { // success
-                BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-
-                while ((inputLine = in .readLine()) != null) {
-                    response.append(inputLine);
-                } in .close();
-
-                // print result
-                System.out.println(response.toString());
-            } else {
-                System.out.println("GET request not worked");
+    static void salam() throws IOException {
+        System.out.println("salam");
+        String link = "http://localhost:" + node_port + "/" + node_number;
+        URL url = new URL(link);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        if (connection!=null) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+                System.out.println(inputLine);
             }
-
-            for (int i = 1; i <= 8; i++) {
-                System.out.println(httpURLConnection.getHeaderFieldKey(i) + " = " + httpURLConnection.getHeaderField(i));
-            }
-
+            in.close();
         }
-
     }
-    static class MyHandler implements HttpHandler {
 
+    static int x =0;
+    static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
 
-                Temp temp = new Temp();
-                String response = "This is the response";
+                String response = "";//"This is the response from node with port : "+ node_port +"and number : "+ node_number;
+            for (int i = 0; i <owned_files.size() ; i++) {
+                if (response.equals("")){
+                    response+=owned_files_dir+owned_files.get(i);
+                }else {
+                    response = response + " " + owned_files_dir+owned_files.get(i);
+                }
+            }
                 t.sendResponseHeaders(200, response.length());
                 OutputStream os = t.getResponseBody();
                 os.write(response.getBytes());

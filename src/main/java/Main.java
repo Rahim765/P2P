@@ -13,12 +13,13 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File file = new File("Config.yml");
+        File file = new File("Config2.yml");
 
         ObjectMapper om = new ObjectMapper(new YAMLFactory());
 
@@ -63,48 +64,44 @@ public class Main {
         }
 
 
-        String link = "http://localhost:" + port + "/" + nodeNum;
-        try {
-            String urlParameters = "message=" + req;
-            URL url = new URL(link);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        URL url = new URL("http://localhost:"+port+"/"+nodeNum);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("param1", "val");
 
-            connection.setDoOutput(true);
-            connection.setDoInput(true);
-            connection.setInstanceFollowRedirects(false);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-            connection.setRequestProperty("charset", "utf-8");
-            connection.setRequestProperty("Content-Length","" + Integer.toString(urlParameters.getBytes().length));
-            System.out.println(connection.getRequestProperty("Content-Length"));
-            connection.setUseCaches(false);
+        con.setDoOutput(true);
+        DataOutputStream out = new DataOutputStream(con.getOutputStream());
+        out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
+        out.flush();
+        out.close();
 
-            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-            wr.writeBytes(urlParameters);
+        con.setInstanceFollowRedirects(false);
+        con.setFollowRedirects(false);
 
-
-
-//            BufferedReader br = null;
-//            if (100 <= conn.getResponseCode() && conn.getResponseCode() <= 399) {
-//                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-//            } else {
-//                br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-//            }
-//
-            int code = connection.getResponseCode();
-            System.out.println(code);
-            wr.flush();
-            wr.close();
-            connection.disconnect();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        String content ="";
+        while ((inputLine = in.readLine()) != null) {
+            content+=inputLine;
         }
+        String[] filedic = content.split(" ");
+        for (int i = 0; i <filedic.length ; i++) {
+            String[] mainfile = filedic[i].split("/");
+            if (mainfile[2].equals(req)){
+                inputLine = filedic[i];
+            }
+        }
+        System.out.println(inputLine);
+        in.close();
 
 
-        Runtime rt = Runtime.getRuntime();
-        String url = link;
-        rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+
+//        String link = "http://localhost:" + port + "/" + nodeNum;
+//        Runtime rt = Runtime.getRuntime();
+//        String url = link;
+//        rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
 
     }
 }
