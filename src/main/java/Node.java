@@ -1,16 +1,17 @@
 import java.awt.image.AreaAveragingScaleFilter;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
 
 public class Node {
     static private int node_number;
@@ -33,41 +34,113 @@ public class Node {
 
     }
 
-    static void salam() throws IOException {
-        System.out.println("salam");
-        String link = "http://localhost:" + node_port + "/" + node_number;
-        URL url = new URL(link);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        if (connection!=null) {
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-                System.out.println(inputLine);
-            }
-            in.close();
-        }
-    }
+//    static void salam() throws IOException {
+//        System.out.println("salam");
+//        String link = "http://localhost:" + node_port + "/" + node_number;
+//        URL url = new URL(link);
+//        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//        if (connection!=null) {
+//            BufferedReader in = new BufferedReader(
+//                    new InputStreamReader(connection.getInputStream()));
+//            String inputLine;
+//            StringBuffer content = new StringBuffer();
+//            while ((inputLine = in.readLine()) != null) {
+//                content.append(inputLine);
+//                System.out.println(inputLine);
+//            }
+//            in.close();
+//        }
+//    }
 
     static int x =0;
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
 
-                String response = "";//"This is the response from node with port : "+ node_port +"and number : "+ node_number;
-            for (int i = 0; i <owned_files.size() ; i++) {
-                if (response.equals("")){
-                    response+=owned_files_dir+owned_files.get(i);
-                }else {
-                    response = response + " " + owned_files_dir+owned_files.get(i);
-                }
+            String response = "";
+            String type = "";
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(t.getRequestBody()));
+            String line= "";
+            while ((line = in.readLine())!= null){
+                System.out.println(line);
+                response = line.split("=")[1];
+                type = line.split("=")[0];
             }
+
+
+                ;//"This is the response from node with port : "+ node_port +"and number : "+ node_number;
+//            for (int i = 0; i <owned_files.size() ; i++) {
+//                if (response.equals("")){
+//                    response+=owned_files_dir+owned_files.get(i);
+//                }else {
+//                    response = response + " " + owned_files_dir+owned_files.get(i);
+//                }
+//            }
+
+            if (type.equals("FileName")) {
+                response = owned_files_dir + response;
                 t.sendResponseHeaders(200, response.length());
                 OutputStream os = t.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
+            }else if (type.equals("NodeName")) {
+                boolean exist = false;
+                for (int i = 0; i < friend_nodes.size(); i++) {
+                    if (friend_nodes.get(i).getNode_name() == Integer.parseInt(response)) {
+                        response = String.valueOf(friend_nodes.get(i).getNode_port());
+                        exist = true;
+                        break;
+                    }
+                }
+
+                if (exist = true) {
+                    t.sendResponseHeaders(200, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }else{
+
+                    int min =100;
+                    int number =0;
+                    int portNumber=0;
+                    for (int i = 0; i <friend_nodes.size() ; i++) {
+                        if (Math.abs(node_number-friend_nodes.get(i).getNode_name()) < min){
+                            min =Math.abs(node_number-friend_nodes.get(i).getNode_name());
+                            number = friend_nodes.get(i).getNode_name();
+                            portNumber = friend_nodes.get(i).getNode_port();
+                        }
+                    }
+                    URL url = new URL("http://localhost:" + portNumber + "/" + number);
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("GET");
+                    Map<String, String> parameters = new HashMap<>();
+                    parameters.put("NodeName", response);
+
+                    con.setDoOutput(true);
+                    DataOutputStream out = new DataOutputStream(con.getOutputStream());
+                    out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
+                    out.flush();
+                    out.close();
+
+                    con.setInstanceFollowRedirects(false);
+                    con.setFollowRedirects(false);
+
+                    BufferedReader in2 = new BufferedReader(
+                            new InputStreamReader(con.getInputStream()));
+                    String inputLine;
+                    String content = "";
+                    while ((inputLine = in2.readLine()) != null) {
+                        content += inputLine;
+                    }
+
+                    response = content;
+                    t.sendResponseHeaders(200, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+            }
 
         }
     }
