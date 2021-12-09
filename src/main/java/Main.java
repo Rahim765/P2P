@@ -33,7 +33,7 @@ public class Main {
         NodeFilesReader node2 = om2.readValue(file2, NodeFilesReader.class);
 
         HttpServer server = HttpServer.create(new InetSocketAddress(node.getNode_port()), 0);
-        server.createContext("/"+node.getNode_number(), new Node.MyHandler());
+        server.createContext("/" + node.getNode_number(), new Node.MyHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
 
@@ -63,49 +63,57 @@ public class Main {
                 port = node.getFriend_nodes().get(i).getNode_port();
         }
 
+        if (port != 0) {
 
-        URL url = new URL("http://localhost:"+port+"/"+nodeNum);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("param1", "val");
+            URL url = new URL("http://localhost:" + port + "/" + nodeNum);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("param1", "val");
 
-        con.setDoOutput(true);
-        DataOutputStream out = new DataOutputStream(con.getOutputStream());
-        out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
-        out.flush();
-        out.close();
+            con.setDoOutput(true);
+            DataOutputStream out = new DataOutputStream(con.getOutputStream());
+            out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
+            out.flush();
+            out.close();
 
-        con.setInstanceFollowRedirects(false);
-        con.setFollowRedirects(false);
+            con.setInstanceFollowRedirects(false);
+            con.setFollowRedirects(false);
 
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        String content ="";
-        String final_string = "";
-        while ((inputLine = in.readLine()) != null) {
-            content+=inputLine;
-        }
-        String[] filedic = content.split(" ");
-        for (int i = 0; i <filedic.length ; i++) {
-            String[] mainfile = filedic[i].split("/");
-            if (mainfile[2].equals(req)){
-                final_string = mainfile[2];
-                inputLine = filedic[i];
-                break;
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            String content = "";
+            String final_string = "";
+            while ((inputLine = in.readLine()) != null) {
+                content += inputLine;
             }
-        }
-        System.out.println(inputLine);
-        in.close();
+            String[] filedic = content.split(" ");
+            for (int i = 0; i < filedic.length; i++) {
+                String[] mainfile = filedic[i].split("/");
+                if (mainfile[2].equals(req)) {
+                    final_string = mainfile[2];
+                    inputLine = filedic[i];
+                    break;
+                }
+            }
+            System.out.println(inputLine);
+            in.close();
 
-       node.setNew_files_dir(node.getNew_files_dir()+final_string+" ");
-        System.out.println(node.getNew_files_dir());
+            node.getNew_files().add(final_string);
+
+            ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+            objectMapper.writeValue(new File("test.yml"), node);
+
+            System.out.println(node.getNew_files().get(0));
 
 //        String link = "http://localhost:" + port + "/" + nodeNum;
 //        Runtime rt = Runtime.getRuntime();
 //        String url = link;
 //        rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
 
+        }else{
+            System.out.println("no adress");
+        }
     }
 }

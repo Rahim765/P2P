@@ -19,6 +19,8 @@ public class Node {
     static private String new_files_dir;
     static private ArrayList<String> owned_files;
     static private ArrayList<FriendNode> friend_nodes ;
+    static private ArrayList<String> new_files = new ArrayList<>();
+
 
     public Node(int node_number, int node_port, String owned_files_dir, String new_files_dir,
                 ArrayList<String> owned_files, ArrayList<FriendNode> friend_nodes) {
@@ -28,9 +30,6 @@ public class Node {
         this.new_files_dir = new_files_dir;
         this.owned_files = owned_files;
         this.friend_nodes = friend_nodes;
-
-
-
 
     }
 
@@ -123,6 +122,14 @@ public class Node {
 
     public void setFriend_nodes(ArrayList<FriendNode> friend_nodes) {
         this.friend_nodes = friend_nodes;
+    }
+
+    public  ArrayList<String> getNew_files() {
+        return new_files;
+    }
+
+    public  void setNew_files(ArrayList<String> new_files) {
+        Node.new_files = new_files;
     }
 
     @Override
