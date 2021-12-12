@@ -19,18 +19,22 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File file = new File("Config.yml");
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter the config file name : ");
+        String conf = sc.nextLine();
 
+
+        File file = new File(conf);
         ObjectMapper om = new ObjectMapper(new YAMLFactory());
-
         Node node = om.readValue(file, Node.class);
 
+        System.out.println("Enter the nodefiles file name : ");
+        String nodefile = sc.nextLine();
 
-        File file2 = new File("NodeFiles.yml");
-
+        File file2 = new File(nodefile);
         ObjectMapper om2 = new ObjectMapper(new YAMLFactory());
-
         NodeFilesReader node2 = om2.readValue(file2, NodeFilesReader.class);
+
 
         HttpServer server = HttpServer.create(new InetSocketAddress(node.getNode_port()), 0);
         server.createContext("/" + node.getNode_number(), new Node.MyHandler());
@@ -38,7 +42,7 @@ public class Main {
         server.start();
 
 
-        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter the file name");
         String req = sc.nextLine();
 
         req = req.split(" ")[1];
@@ -65,6 +69,8 @@ public class Main {
 
         if (port != 0) {
 
+            System.out.println("We have the adress of node that contain the file : "+ req );
+            System.out.println("sending request to node wiht port "+ port +".....");
             URL url = new URL("http://localhost:" + port + "/" + nodeNum);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
@@ -87,20 +93,17 @@ public class Main {
             while ((inputLine = in.readLine()) != null) {
                 content += inputLine;
             }
-            System.out.println(content);
+            System.out.println("the new file adress is : "+ content);
             in.close();
             String[] sp = content.split("/");
             content = sp[2];
             node.getNew_files().add(content);
+            System.out.println("the new file ( "+ content +" ) was added to new directories ");
             ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
             objectMapper.writeValue(new File("test.yml"), node);
 
-//        String link = "http://localhost:" + port + "/" + nodeNum;
-//        Runtime rt = Runtime.getRuntime();
-//        String url = link;
-//        rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
-
         }else{
+            System.out.println(node.getNode_number() +" deos not have the port of the node that contain the requested file ");
             int min =100;
             int number =0;
             int portNumber=0;
@@ -112,11 +115,13 @@ public class Main {
                 }
             }
 
+            System.out.println("the nearest node to this node is the node with port "+ portNumber );
+            System.out.println("sending request to node with port : "+ portNumber);
             URL url = new URL("http://localhost:" + portNumber + "/" + number);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             Map<String, String> parameters = new HashMap<>();
-            parameters.put("NodeName", String.valueOf(nodeNum));
+            parameters.put(node.getNode_number()+"NodeName", String.valueOf(nodeNum));
 
             con.setDoOutput(true);
             DataOutputStream out = new DataOutputStream(con.getOutputStream());
@@ -135,12 +140,10 @@ public class Main {
                 content += inputLine;
             }
 
-
-
+            System.out.println("the port number of the node that contains the request file is : " + content);
+            System.out.println("sending file request to node with port number "+ content+" ...");
 
             URL url2 = new URL("http://localhost:" + content + "/" + nodeNum);
-            System.out.println(content);
-            System.out.println(nodeNum);
             HttpURLConnection con2 = (HttpURLConnection) url2.openConnection();
             con2.setRequestMethod("GET");
             Map<String, String> parameters2 = new HashMap<>();
@@ -162,14 +165,14 @@ public class Main {
             while ((inputLine2 = in2.readLine()) != null) {
                 content2 += inputLine2;
             }
-            System.out.println(content2);
+            System.out.println("the requested file directori : "+content2);
             in2.close();
             String[] sp2 = content2.split("/");
             content2 = sp2[2];
             node.getNew_files().add(content2);
+            System.out.println("the requested file was added to new files firectory ");
             ObjectMapper objectMapper2 = new ObjectMapper(new YAMLFactory());
-            objectMapper2.writeValue(new File("test.yml"), node);
-
+            objectMapper2.writeValue(new File(conf), node);
             System.out.println(node.getNew_files().get(0));
 
         }

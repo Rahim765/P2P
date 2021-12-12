@@ -34,49 +34,23 @@ public class Node {
 
     }
 
-//    static void salam() throws IOException {
-//        System.out.println("salam");
-//        String link = "http://localhost:" + node_port + "/" + node_number;
-//        URL url = new URL(link);
-//        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//        if (connection!=null) {
-//            BufferedReader in = new BufferedReader(
-//                    new InputStreamReader(connection.getInputStream()));
-//            String inputLine;
-//            StringBuffer content = new StringBuffer();
-//            while ((inputLine = in.readLine()) != null) {
-//                content.append(inputLine);
-//                System.out.println(inputLine);
-//            }
-//            in.close();
-//        }
-//    }
 
-    static int x =0;
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
 
+            int illegal_port =0;
             String response = "";
             String type = "";
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(t.getRequestBody()));
             String line= "";
             while ((line = in.readLine())!= null){
-                System.out.println(line);
                 response = line.split("=")[1];
                 type = line.split("=")[0];
             }
 
 
-                ;//"This is the response from node with port : "+ node_port +"and number : "+ node_number;
-//            for (int i = 0; i <owned_files.size() ; i++) {
-//                if (response.equals("")){
-//                    response+=owned_files_dir+owned_files.get(i);
-//                }else {
-//                    response = response + " " + owned_files_dir+owned_files.get(i);
-//                }
-//            }
 
             if (type.equals("FileName")) {
                 response = owned_files_dir + response;
@@ -84,7 +58,8 @@ public class Node {
                 OutputStream os = t.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
-            }else if (type.equals("NodeName")) {
+            }else{
+                illegal_port = Integer.parseInt(type.substring(0,1));
                 boolean exist = false;
                 for (int i = 0; i < friend_nodes.size(); i++) {
                     if (friend_nodes.get(i).getNode_name() == Integer.parseInt(response)) {
@@ -94,7 +69,7 @@ public class Node {
                     }
                 }
 
-                if (exist = true) {
+                if (exist) {
                     t.sendResponseHeaders(200, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
@@ -105,7 +80,8 @@ public class Node {
                     int number =0;
                     int portNumber=0;
                     for (int i = 0; i <friend_nodes.size() ; i++) {
-                        if (Math.abs(node_number-friend_nodes.get(i).getNode_name()) < min){
+                        if (Math.abs(node_number-friend_nodes.get(i).getNode_name()) < min &&
+                                ( ( friend_nodes.get(i).getNode_name() != illegal_port )) ){
                             min =Math.abs(node_number-friend_nodes.get(i).getNode_name());
                             number = friend_nodes.get(i).getNode_name();
                             portNumber = friend_nodes.get(i).getNode_port();
@@ -115,7 +91,7 @@ public class Node {
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     Map<String, String> parameters = new HashMap<>();
-                    parameters.put("NodeName", response);
+                    parameters.put(node_number+"NodeName", response);
 
                     con.setDoOutput(true);
                     DataOutputStream out = new DataOutputStream(con.getOutputStream());
