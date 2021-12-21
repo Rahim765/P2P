@@ -38,7 +38,7 @@ public class Main {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(node.getNode_port()), 0);
         server.createContext("/" + node.getNode_number(), new Node.MyHandler());
-        server.setExecutor(null); // creates a default executor
+        server.setExecutor(null);
         server.start();
 
 
